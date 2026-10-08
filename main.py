@@ -246,6 +246,8 @@ def main() -> None:
     ap.add_argument("--kb", help="Knowledge base JSON (default: knowledge_base.json next to main.py)")
     ap.add_argument("--no-learn", action="store_true",
                     help="Use the fixed rules only -- no learning, knowledge base not read or written")
+    ap.add_argument("--push-sql", action="store_true",
+                    help="Also upsert the results into Azure SQL (see push_to_sql.py / .env)")
     args = ap.parse_args()
 
     src = args.input or input("Path to the batch .zip (or folder): ").strip().strip('"')
@@ -307,6 +309,11 @@ def main() -> None:
         for row in learned["new"][:25]:
             log.info("  %-22s %s -> %s", row["Type"], row["Pattern"], row["Learned"])
         log.info("Knowledge base: %s", learner.kb.path.resolve())
+
+    if args.push_sql:
+        from claims_extractor.sql_client import push_results
+        from push_to_sql import log_totals
+        log_totals(push_results(results))
 
 
 if __name__ == "__main__":
